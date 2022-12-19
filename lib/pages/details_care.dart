@@ -1,13 +1,12 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last
 
 import 'package:pet_cats_app/model/care.dart';
-import 'package:pet_cats_app/pages/ccare.dart';
 import 'package:pet_cats_app/shared/appbar.dart';
 import 'package:flutter/material.dart';
 
 class Ddetail extends StatefulWidget {
-  care product;
-  Ddetail({required this.product});
+  final Care product;
+  const Ddetail({super.key, required this.product});
 
   @override
   State<Ddetail> createState() => _DdetailState();

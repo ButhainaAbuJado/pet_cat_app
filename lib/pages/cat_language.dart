@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 
-class catl extends StatefulWidget {
-  const catl ({Key? key}) : super(key: key);
+class CatLanguage extends StatefulWidget {
+  const CatLanguage ({Key? key}) : super(key: key);
 
   @override
-  State<catl > createState() => _catl ();
+  State<CatLanguage > createState() => _CatLanguageState ();
 }
 
-class _catl extends State<catl > {
+class _CatLanguageState extends State<CatLanguage > {
   YoutubePlayerController? _controller;
 
   @override

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 // ignore_for_file: prefer_const_constructors
 class About extends StatefulWidget {
+  const About({super.key});
+
   @override
   State<About> createState() => _About();
 }

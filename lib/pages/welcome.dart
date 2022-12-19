@@ -45,12 +45,12 @@ class Welcome extends StatelessWidget {
                         backgroundColor:
                             MaterialStateProperty.all(Colors.purple),
                         padding: MaterialStateProperty.all(
-                            EdgeInsets.symmetric(horizontal: 79, vertical: 10)),
+                            EdgeInsets.symmetric(horizontal: 72, vertical: 10)),
                         shape: MaterialStateProperty.all(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(27))),
                       ),
                       child: Text(
-                        "login",
+                        "Sign In",
                         style: TextStyle(fontSize: 24),
                       ),
                     ),

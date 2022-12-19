@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 // ignore_for_file: prefer_const_constructors
 class Clinic extends StatefulWidget {
+  const Clinic({super.key});
+
   @override
   State<Clinic> createState() => _Clinic();
 }

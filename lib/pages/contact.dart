@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 // ignore_for_file: prefer_const_constructors
 class Contact extends StatefulWidget {
+  const Contact({super.key});
+
   @override
   State<Contact> createState() => _Contact();
 }
