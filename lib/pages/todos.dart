@@ -1,8 +1,11 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'package:flutter/material.dart';
+import 'package:pet_cats_app/services/task_management_service.dart';
+import 'package:pet_cats_app/shared/loading.dart';
 import 'package:pet_cats_app/widgets/counter.dart';
-import 'package:pet_cats_app/widgets/todo-card.dart';
+import 'package:pet_cats_app/widgets/todo_card.dart';
+import 'package:uuid/uuid.dart';
+
+import '../model/task_model.dart';
 
 class TodoS extends StatefulWidget {
   const TodoS({Key? key}) : super(key: key);
@@ -11,64 +14,19 @@ class TodoS extends StatefulWidget {
   State<TodoS> createState() => _TodoS();
 }
 
-// class for task(todo-card)
-class Task {
-  String title;
-  bool status;
-  Task({
-    required this.title,
-    required this.status,
-  });
-}
-
 class _TodoS extends State<TodoS> {
   // list of todos
-  List allTasks = [
-    Task(title: "eat the food", status: true),
-    Task(title: "palying ", status: true),
-    Task(title: "Training", status: true),
-    Task(title: "take the vaccine", status: true),
-  ];
-
-// To remove todo  when clicking on "delete" icon
-  delete(int clickedTask) {
-    setState(() {
-      allTasks.remove(allTasks[clickedTask]);
-    });
-  }
-
-// To remove all todos  when clicking on "delete" icon in the appBar
-  deleteAll() {
-    setState(() {
-      allTasks.removeRange(0, allTasks.length);
-    });
-  }
-
-// To change the state of the todo (completed or not completed) when click on the todo
-  changeStatus(int taskIndex) {
-    setState(() {
-      allTasks[taskIndex].status = !allTasks[taskIndex].status;
-    });
-  }
-
-// To add new todo when clicking on "ADD" in the dialog widget
-  addnewtask() {
-    setState(() {
-      allTasks.add(
-        Task(title: myController.text, status: false),
-      );
-    });
-  }
+  List<Task>? allTasks;
 
 // Create controller to  get the text inside the textfield  in the dialog widget
-  final myController = TextEditingController();
+  final taskTitleController = TextEditingController();
 
 // To calculate only completed todos
 // we will explain the difference between forEach & for loop in the next lesson (lesson11)
   int calculateCompletedTasks() {
     int completedTasks = 0;
 
-    for (var item in allTasks) {
+    for (var item in allTasks!) {
       if (item.status) {
         completedTasks++;
       }
@@ -78,7 +36,19 @@ class _TodoS extends State<TodoS> {
   }
 
   @override
+  void initState() {
+    getTasks();
+    super.initState();
+  }
+
+  getTasks() async {
+    allTasks = await TaskManagement().getTasks();
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    getTasks();
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -89,25 +59,34 @@ class _TodoS extends State<TodoS> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(11)),
                 child: Container(
-                  padding: EdgeInsets.all(22),
+                  padding: const EdgeInsets.all(22),
                   height: 200,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextField(
-                          controller: myController,
+                          controller: taskTitleController,
                           maxLength: 20,
                           decoration:
-                              InputDecoration(hintText: "Add new Task")),
-                      SizedBox(
+                              const InputDecoration(hintText: "Add new Task")),
+                      const SizedBox(
                         height: 22,
                       ),
                       TextButton(
-                          onPressed: () {
-                            addnewtask();
+                          onPressed: () async {
+                            await Loading.wrap(
+                              context: context,
+                              function: () async {
+                                await TaskManagement().addNewTask(Task(
+                                    id: const Uuid().v4(),
+                                    title: taskTitleController.text,
+                                    status: false));
+                              },
+                            );
+                            taskTitleController.clear();
                             Navigator.pop(context);
                           },
-                          child: Text(
+                          child: const Text(
                             "ADD",
                             style: TextStyle(fontSize: 22),
                           ))
@@ -118,24 +97,29 @@ class _TodoS extends State<TodoS> {
             },
           );
         },
-        child: Icon(Icons.add),
         backgroundColor: Colors.purple,
+        child: const Icon(Icons.add),
       ),
       backgroundColor: Colors.purple[100],
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed: () {
-              deleteAll();
+            onPressed: () async {
+              await Loading.wrap(
+                context: context,
+                function: () async {
+                  await TaskManagement().deleteAll();
+                },
+              );
             },
-            icon: Icon(Icons.delete_forever),
+            icon: const Icon(Icons.delete_forever),
             iconSize: 37,
             color: Colors.purple[100],
           )
         ],
         elevation: 0,
         backgroundColor: Colors.purple,
-        title: Text(
+        title: const Text(
           "Task solution",
           style: TextStyle(
             fontSize: 30,
@@ -143,35 +127,38 @@ class _TodoS extends State<TodoS> {
           ),
         ),
       ),
-      body: SizedBox(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Counter(
-                  allTodos: allTasks.length,
-                  allCompleted: calculateCompletedTasks()),
-              Container(
-                margin: EdgeInsets.only(top: 22),
-                height: 550,
-                color: Colors.white,
-                child: ListView.builder(
-                    itemCount: allTasks.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Todecard(
-                          // I will pass all these information when create the Todecard() widget in "todo-card.dart" file
-                          vartitle: allTasks[index].title,
-                          doneORnot: allTasks[index].status,
-                          changeStatus: changeStatus,
-                          index: index,
-                          delete: delete);
-                    }),
-              )
-            ],
-          ),
-        ),
-      ),
+      body: allTasks == null
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(Colors.white),
+              ),
+            )
+          : SizedBox(
+              width: double.infinity,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Counter(
+                        allTodos: allTasks!.length,
+                        allCompleted: calculateCompletedTasks()),
+                    Container(
+                      margin: const EdgeInsets.only(top: 22),
+                      height: 550,
+                      color: Colors.white,
+                      child: ListView.builder(
+                          itemCount: allTasks!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return TodoCard(
+                              // I will pass all these information when create the Todecard() widget in "todo-card.dart" file
+                              task: allTasks![index],
+                            );
+                          }),
+                    )
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }

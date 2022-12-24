@@ -1,6 +1,15 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:pet_cats_app/model/user_model.dart';
+import 'package:pet_cats_app/services/auth_service.dart';
+import 'package:pet_cats_app/shared/loading.dart';
+
+import '../services/storage_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -16,7 +25,15 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         actions: [
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () async {
+              await Loading.wrap(
+                context: context,
+                function: () async {
+                  await AuthServices.logout(context: context);
+                },
+              );
+              Navigator.of(context).pushNamedAndRemoveUntil("/login", (route) => false);
+            },
             label: const Text(
               "logout",
               style: TextStyle(
@@ -38,45 +55,59 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(
+                height: 15,
+              ),
               Center(
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color.fromARGB(125, 78, 91, 110),
-                  ),
-                  child: Stack(
-                    children: [
-                      ClipOval(),
-                      Positioned(
-                        left: 103,
-                        bottom: -10,
+                child: Stack(
+                  children: [
+                    ClipOval(),
+                    CircleAvatar(
+                      radius: MediaQuery.of(context).size.width * 0.2,
+                      backgroundImage: UserModel.shared.imageUrl.isEmpty
+                          ? AssetImage('assets/images/beso.jpg')
+                          : NetworkImage(UserModel.shared.imageUrl)
+                              as ImageProvider,
+                      backgroundColor: Colors.purple[100],
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.purple),
                         child: IconButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            final image = await ImagePicker()
+                                .pickImage(source: ImageSource.gallery);
+                            File img = File(image!.path);
+                            String url = '';
+                            await Loading.wrap(
+                              context: context,
+                              function: () async {
+                                url = await StorageService.uploadProfilePicture(
+                                    UserModel.shared.imageUrl, img);
+                                await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(UserModel.shared.userId)
+                                    .update({"imageUrl": url});
+                              },
+                            );
+                            setState(() {
+                              UserModel.shared.imageUrl = url;
+                            });
+                          },
                           icon: const Icon(Icons.add_a_photo),
-                          color: const Color.fromARGB(255, 94, 115, 128),
+                          color: Colors.white,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(
                 height: 33,
               ),
-              Center(
-                  child: Container(
-                padding: const EdgeInsets.all(11),
-                decoration: BoxDecoration(
-                    color: Colors.purple[100],
-                    borderRadius: BorderRadius.circular(11)),
-                child: const Text(
-                  "Info from firebase Auth",
-                  style: TextStyle(
-                    fontSize: 22,
-                  ),
-                ),
-              )),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 // ignore: prefer_const_literals_to_create_immutables
@@ -85,7 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     height: 11,
                   ),
                   Text(
-                    " Email:",
+                    " Email:   ${UserModel.shared.email}",
                     style: const TextStyle(
                       fontSize: 17,
                     ),
@@ -96,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     //
 
-                    "Created date:  ",
+                    "Created date:   ${UserModel.shared.createdDate.split(".")[0]} ",
                     style: const TextStyle(
                       fontSize: 17,
                     ),
@@ -106,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   Text(
                     //
-                    " Last Signed In: ",
+                    " Last Signed In:   ${UserModel.shared.lastSignedIn.split(".")[0]}",
                     style: const TextStyle(
                       fontSize: 17,
                     ),
@@ -118,7 +149,15 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               Center(
                 child: TextButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await Loading.wrap(
+                        context: context,
+                        function: () async {
+                          await AuthServices.deleteUser(context: context);
+                        },
+                      );
+                      Navigator.of(context).pushNamedAndRemoveUntil("/login", (route) => false);
+                    },
                     child: const Text(
                       "Delete User",
                       style: TextStyle(fontSize: 18),

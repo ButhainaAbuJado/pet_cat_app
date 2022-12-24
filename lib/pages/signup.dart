@@ -1,13 +1,19 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-import 'package:pet_cats_app/pages/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pet_cats_app/services/auth_service.dart';
+
+import '../shared/loading.dart';
 
 class Signup extends StatelessWidget {
   const Signup({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController emailController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
+    final TextEditingController usernameController = TextEditingController();
+
     return SafeArea(
       child: Scaffold(
           body: SafeArea(
@@ -39,7 +45,7 @@ class Signup extends StatelessWidget {
                         ),
                         SvgPicture.asset(
                           "assets/icons/signup.svg",
-                          height: 222,
+                          height: 200,
                         ),
                         SizedBox(
                           height: 27,
@@ -52,17 +58,18 @@ class Signup extends StatelessWidget {
                           width: 266,
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
+                            controller: usernameController,
                             decoration: InputDecoration(
                                 icon: Icon(
                                   Icons.person,
                                   color: Colors.purple[800],
                                 ),
-                                hintText: "Your Email :",
+                                hintText: "Username :",
                                 border: InputBorder.none),
                           ),
                         ),
                         SizedBox(
-                          height: 23,
+                          height: 15,
                         ),
                         Container(
                           decoration: BoxDecoration(
@@ -72,6 +79,28 @@ class Signup extends StatelessWidget {
                           width: 266,
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
+                            controller: emailController,
+                            decoration: InputDecoration(
+                                icon: Icon(
+                                  Icons.person,
+                                  color: Colors.purple[800],
+                                ),
+                                hintText: "Email :",
+                                border: InputBorder.none),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.purple[100],
+                            borderRadius: BorderRadius.circular(66),
+                          ),
+                          width: 266,
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: TextField(
+                            controller: passwordController,
                             obscureText: true,
                             decoration: InputDecoration(
                                 suffix: Icon(
@@ -88,11 +117,25 @@ class Signup extends StatelessWidget {
                           ),
                         ),
                         SizedBox(
-                          height: 17,
+                          height: 12,
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, "/Home");
+                          onPressed: () async {
+                            bool isValidCredentials = false;
+                            await Loading.wrap(
+                              context: context,
+                              function: () async {
+                               isValidCredentials = await AuthServices.signUp(
+                                  username: usernameController.text.trim(),
+                                  email: emailController.text,
+                                  password: passwordController.text,
+                                  context: context,
+                                );
+                              },
+                            );
+                            if(isValidCredentials){
+                              Navigator.of(context).pushNamed('/login');
+                            }
                           },
                           style: ButtonStyle(
                             backgroundColor:

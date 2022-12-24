@@ -16,7 +16,7 @@ class CheckOut extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.purple,
         title: Text("checkout screen"),
-        actions: [ProductsAndPrice()],
+        actions: const [ProductsAndPrice()],
       ),
       body: Column(
         children: [
@@ -33,15 +33,45 @@ class CheckOut extends StatelessWidget {
                         subtitle: Text(
                             "${carttt.selectedProducts[index].price} - ${carttt.selectedProducts[index].location}"),
                         leading: CircleAvatar(
-                          backgroundImage: AssetImage(
-                              carttt.selectedProducts[index].imgPath),
+                          backgroundImage: NetworkImage(
+                              carttt.selectedProducts[index].imageUrl),
                         ),
-                        trailing: IconButton(
-                            onPressed: () {
-                              carttt.delete(carttt.selectedProducts[index]);
-                            },
-                            icon: Icon(Icons.remove)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  if(carttt.selectedProducts[index].quantity == 1){
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            "Item deleted Successfully!",
+                                            style: TextStyle(
+                                                color: Colors.purple),
+                                          ),
+                                        ),
+                                        backgroundColor: Colors.purple[100],
+                                        duration: Duration(
+                                          seconds: 2,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  carttt.decrement(carttt.selectedProducts[index]);
+                                },
+                                icon: Icon(Icons.remove_circle_outline)),
+                            Text(carttt.selectedProducts[index].quantity.toString()),
+                            IconButton(
+                                onPressed: () {
+                                  carttt.increment(carttt.selectedProducts[index]);
+                                },
+                                icon: Icon(Icons.add_circle_outline)),
+                          ],
+                        ),
                       ),
+
                     );
                   }),
             ),
@@ -49,13 +79,13 @@ class CheckOut extends StatelessWidget {
           ElevatedButton(
             onPressed: () {},
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(BTNpink),
+              backgroundColor: MaterialStateProperty.all(buttonPink),
               padding: MaterialStateProperty.all(EdgeInsets.all(12)),
               shape: MaterialStateProperty.all(RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8))),
             ),
             child: Text(
-              "Pay ${carttt.price}\JOD",
+              "Pay ${carttt.price} JOD",
               style: TextStyle(fontSize: 19),
             ),
           ),

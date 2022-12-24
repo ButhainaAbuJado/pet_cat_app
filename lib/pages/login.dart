@@ -1,12 +1,18 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pet_cats_app/model/user_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
+import 'package:pet_cats_app/services/auth_service.dart';
+import 'package:pet_cats_app/shared/loading.dart';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
- 
+
   @override
   Widget build(BuildContext context) {
+    final TextEditingController usernameController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
     return SafeArea(
       child: Scaffold(
           body: SafeArea(
@@ -19,25 +25,25 @@ class Login extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: SingleChildScrollView(
-                    physics: BouncingScrollPhysics(),
+                    physics: const BouncingScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           height: 35,
                         ),
-                        Text(
+                        const Text(
                           "Log in",
                           style: TextStyle(fontSize: 33, fontFamily: "myfont"),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 35,
                         ),
                         SvgPicture.asset(
                           "assets/icons/login.svg",
                           width: 288,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 35,
                         ),
                         Container(
@@ -46,18 +52,19 @@ class Login extends StatelessWidget {
                             borderRadius: BorderRadius.circular(66),
                           ),
                           width: 266,
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
+                            controller: usernameController,
                             decoration: InputDecoration(
                                 icon: Icon(
                                   Icons.person,
                                   color: Colors.purple[800],
                                 ),
-                                hintText: "Your Email :",
+                                hintText: "Username :",
                                 border: InputBorder.none),
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 23,
                         ),
                         Container(
@@ -66,8 +73,9 @@ class Login extends StatelessWidget {
                             borderRadius: BorderRadius.circular(66),
                           ),
                           width: 266,
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
+                            controller: passwordController,
                             obscureText: true,
                             decoration: InputDecoration(
                                 suffix: Icon(
@@ -83,40 +91,78 @@ class Login extends StatelessWidget {
                                 border: InputBorder.none),
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 17,
                         ),
                         ElevatedButton(
-                          onPressed: () {         },
-                          
+                          onPressed: () async {
+                            bool isValidCredential = false;
+                            await Loading.wrap(
+                              context: context,
+                              function: () async {
+                                isValidCredential = await AuthServices.signIn(
+                                  username: usernameController.text.trim(),
+                                  password: passwordController.text,
+                                  context: context,
+                                );
+                              },
+                            );
+
+                            if (isValidCredential) {
+                              await _fillUserModel(context: context);
+                              Navigator.of(context).pushNamedAndRemoveUntil(
+                                '/Home',
+                                (route) => false,
+                              );
+                            }
+                          },
                           style: ButtonStyle(
                             backgroundColor:
                                 MaterialStateProperty.all(Colors.purple),
                             padding: MaterialStateProperty.all(
-                                EdgeInsets.symmetric(
-                                    horizontal: 106, vertical: 10)),
+                                const EdgeInsets.symmetric(
+                                    horizontal: 97, vertical: 10)),
                             shape: MaterialStateProperty.all(
                                 RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(27))),
                           ),
-                          child: Text(
-                            "login",
+                          child: const Text(
+                            "Sign in",
                             style: TextStyle(fontSize: 24),
                           ),
                         ),
-                        SizedBox(
-                          height: 17,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: TextButton(
+                              style: const ButtonStyle(),
+                              child: const Text(
+                                "Forgot Password ?",
+                                style: TextStyle(color: Colors.purple),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context)
+                                    .pushNamed("/forgotPassword");
+                              },
+                            ),
+                          ),
                         ),
-                        
+                        const SizedBox(
+                          height: 37,
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("Don't have an accout? "),
-                  
+                            const Text("Don't have an accout? "),
                             GestureDetector(
-                              onTap: (){ Navigator.pushNamed(context, "/signup");},
-                              child: Text(" Sign up", style: TextStyle(fontWeight: FontWeight.bold),)),
-                  
+                                onTap: () {
+                                  Navigator.pushNamed(context, "/signup");
+                                },
+                                child: const Text(
+                                  " Sign up",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                )),
                           ],
                         )
                       ],
@@ -143,6 +189,26 @@ class Login extends StatelessWidget {
           ),
         ),
       )),
+    );
+  }
+
+  Future<void> _fillUserModel({required BuildContext context}) async{
+    await Loading.wrap(
+      context: context,
+      function: () async {
+        final user = FirebaseAuth.instance.currentUser!;
+        final firestoreUser = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        UserModel.shared.userId = user.uid;
+        UserModel.shared.username = firestoreUser.get('username');
+        UserModel.shared.email = user.email!;
+        UserModel.shared.createdDate = user.metadata.creationTime.toString();
+        UserModel.shared.lastSignedIn = user.metadata.lastSignInTime.toString();
+        UserModel.shared.imageUrl = firestoreUser.get('imageUrl');
+      },
     );
   }
 }

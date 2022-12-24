@@ -1,47 +1,40 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
+import 'package:pet_cats_app/services/task_management_service.dart';
 
-class Todecard extends StatelessWidget {
-  final String vartitle;
-  final bool doneORnot;
-  final Function changeStatus;
-  final int index;
-  final Function delete;
+import '../model/task_model.dart';
 
-  const Todecard(
-      {Key? key,
-      required this.vartitle,
-      required this.changeStatus,
-      required this.index,
-      required this.delete,
-      required this.doneORnot})
+class TodoCard extends StatelessWidget {
+  final Task task;
+
+  const TodoCard(
+      {Key? key, required this.task,})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        changeStatus(index);
+      onTap: () async{
+        await TaskManagement().changeStatus(task.status , task.id);
+
       },
       child: FractionallySizedBox(
         widthFactor: 0.9,
         child: Container(
-          margin: EdgeInsets.only(top: 20),
-          padding: EdgeInsets.all(15),
+          margin: const EdgeInsets.only(top: 20),
+          padding: const EdgeInsets.all(15),
           // ignore: sort_child_properties_last
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                vartitle,
+                task.title,
                 style: TextStyle(
                   //  condition? true : false
-                  color: doneORnot
-                      ? Color.fromARGB(255, 27, 26, 26)
+                  color: task.status
+                      ? const Color.fromARGB(255, 27, 26, 26)
                       : Colors.white,
                   fontSize: 22,
-                  decoration: doneORnot
+                  decoration: task.status
                       ? TextDecoration.lineThrough
                       : TextDecoration.none,
                 ),
@@ -49,18 +42,18 @@ class Todecard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    doneORnot ? Icons.check : Icons.close,
+                    task.status ? Icons.check : Icons.close,
                     size: 27,
-                    color: doneORnot ? Colors.green[400] : Colors.red,
+                    color: task.status ? Colors.green[400] : Colors.red,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 17,
                   ),
                   IconButton(
-                    onPressed: () {
-                      delete(index);
+                    onPressed: () async {
+                     await  TaskManagement().delete(task.id);
                     },
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     iconSize: 27,
                     color: Colors.purple,
                   )

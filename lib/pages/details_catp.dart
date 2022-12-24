@@ -1,20 +1,18 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last
 
+import 'package:pet_cats_app/model/cat_product_model.dart';
 import 'package:pet_cats_app/shared/appbar.dart';
 import 'package:flutter/material.dart';
 
-import '../model/item.dart';
-
-class Detail extends StatefulWidget {
-  Item product;
-  Detail({required this.product});
+class ProductDetails extends StatefulWidget {
+  final CatProduct product;
+  const ProductDetails({super.key, required this.product});
 
   @override
-  State<Detail> createState() => _DetailState();
+  State<ProductDetails> createState() => _ProductDetailsState();
 }
 
-class _DetailState extends State<Detail> {
-  // const Details({Key? key}) : super(key: key);
+class _ProductDetailsState extends State<ProductDetails> {
   bool isShowMore = true;
 
   @override
@@ -29,7 +27,7 @@ class _DetailState extends State<Detail> {
           physics: BouncingScrollPhysics(),
           child: Column(
             children: [
-              Image.asset(widget.product.imgPath),
+              Image.network(widget.product.imageUrl),
               SizedBox(
                 height: 11,
               ),
@@ -100,7 +98,7 @@ class _DetailState extends State<Detail> {
                         width: 3,
                       ),
                       Text(
-                        widget.product.location,
+                        widget.product.location!,
                         style: TextStyle(fontSize: 19),
                       ),
                     ],

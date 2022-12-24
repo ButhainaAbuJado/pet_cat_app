@@ -40,3 +40,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
+//todo add loading class and exit dialog to login screen
