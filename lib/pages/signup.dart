@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pet_cats_app/services/auth_service.dart';
 
+import '../shared/dialog_helper.dart';
 import '../shared/loading.dart';
 
 class Signup extends StatelessWidget {
@@ -121,6 +122,14 @@ class Signup extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
+                            if(usernameController.text.isEmpty || passwordController.text.isEmpty || emailController.text.isEmpty){
+                              DialogHelper.shared.showErrorDialog(context: context, subTitle: "All fields are required");
+                              return ;
+                            }
+                            if(!validateStructure(passwordController.text)){
+                              DialogHelper.shared.showErrorDialog(context: context,title: 'Invalid Password', subTitle: "Your password should have Uppercase and lowercase letters, Numerics and Special Characters ( ! @ # \$ & * ~ )");
+                              return ;
+                            }
                             bool isValidCredentials = false;
                             await Loading.wrap(
                               context: context,
@@ -280,5 +289,11 @@ class Signup extends StatelessWidget {
         ),
       )),
     );
+  }
+
+  bool validateStructure(String value){
+    String  pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+    RegExp regExp = RegExp(pattern);
+    return regExp.hasMatch(value);
   }
 }

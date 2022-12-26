@@ -12,9 +12,11 @@ import 'package:pet_cats_app/pages/todos.dart';
 import 'package:pet_cats_app/pages/profile_page.dart';
 import 'package:pet_cats_app/pages/training.dart';
 import 'package:pet_cats_app/provider/cart.dart';
+import 'package:pet_cats_app/search/search_cat.dart';
 import 'package:pet_cats_app/services/database_service.dart';
 import 'package:pet_cats_app/shared/appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:pet_cats_app/shared/dialog_helper.dart';
 import 'package:pet_cats_app/shared/loading.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -154,9 +156,11 @@ class _HomeState extends State<Home> {
                                   color: Colors.purple,
                                   onPressed: () {
                                     cart.add(CartItem(
+                                      id: cats![index].id,
                                       imageUrl: cats![index].imageUrl,
                                       name: cats![index].name,
                                       price: cats![index].price,
+                                      collection: 'cats',
                                       location: cats![index].location!,
                                     ));
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -363,14 +367,22 @@ class _HomeState extends State<Home> {
                           title: Text("Logout"),
                           leading:
                               Icon(Icons.exit_to_app, color: Colors.purple),
-                          onTap: () async {
-                            await Loading.wrap(
+                          onTap: () {
+                            DialogHelper.shared.showAreYouSureDialog(
                               context: context,
-                              function: () async {
-                                await AuthServices.logout(context: context);
+                              title: "Logout",
+                              subTitle: "Are you sure you want to logout?",
+                              action: () async {
+                                await Loading.wrap(
+                                  context: context,
+                                  function: () async {
+                                    await AuthServices.logout(context: context);
+                                  },
+                                );
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                    "/login", (route) => false);
                               },
                             );
-                            Navigator.of(context).pushNamedAndRemoveUntil("/login", (route) => false);
                           },
                         ),
                       ],
@@ -391,7 +403,12 @@ class _HomeState extends State<Home> {
               Column(
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await showSearch(
+                        context: context,
+                        delegate: SearchCat(cats: cats!),
+                      );
+                    },
                     icon: Icon(Icons.search),
                   ),
                 ],

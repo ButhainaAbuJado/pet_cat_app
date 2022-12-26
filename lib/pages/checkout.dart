@@ -1,8 +1,10 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:pet_cats_app/model/order_model.dart';
+import 'package:pet_cats_app/model/user_model.dart';
+import 'package:pet_cats_app/pages/order_details_screen.dart';
 import 'package:pet_cats_app/provider/cart.dart';
 import 'package:pet_cats_app/shared/appbar.dart';
-import 'package:pet_cats_app/shared/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -41,15 +43,16 @@ class CheckOut extends StatelessWidget {
                           children: [
                             IconButton(
                                 onPressed: () {
-                                  if(carttt.selectedProducts[index].quantity == 1){
+                                  if (carttt.selectedProducts[index].quantity ==
+                                      1) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Text(
                                             "Item deleted Successfully!",
-                                            style: TextStyle(
-                                                color: Colors.purple),
+                                            style:
+                                                TextStyle(color: Colors.purple),
                                           ),
                                         ),
                                         backgroundColor: Colors.purple[100],
@@ -59,33 +62,49 @@ class CheckOut extends StatelessWidget {
                                       ),
                                     );
                                   }
-                                  carttt.decrement(carttt.selectedProducts[index]);
+                                  carttt.decrement(
+                                      carttt.selectedProducts[index]);
                                 },
                                 icon: Icon(Icons.remove_circle_outline)),
-                            Text(carttt.selectedProducts[index].quantity.toString()),
+                            Text(carttt.selectedProducts[index].quantity
+                                .toString()),
                             IconButton(
                                 onPressed: () {
-                                  carttt.increment(carttt.selectedProducts[index]);
+                                  carttt.increment(
+                                      carttt.selectedProducts[index]);
                                 },
                                 icon: Icon(Icons.add_circle_outline)),
                           ],
                         ),
                       ),
-
                     );
                   }),
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => OrderDetailsScreen(
+                    order: OrderModel(
+                      items: carttt.selectedProducts,
+                      mobileNumber: '',
+                      dateAndTime: DateTime.now().toString().split('.')[0],
+                      location: '',
+                      username: UserModel.shared.username,
+                    ),
+                  ),
+                ),
+              );
+            },
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(buttonPink),
+              backgroundColor: MaterialStateProperty.all(Colors.purple),
               padding: MaterialStateProperty.all(EdgeInsets.all(12)),
               shape: MaterialStateProperty.all(RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8))),
             ),
             child: Text(
-              "Pay ${carttt.price} JOD",
+              "Order ${carttt.price} JOD",
               style: TextStyle(fontSize: 19),
             ),
           ),

@@ -1,17 +1,25 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
-import 'package:pet_cats_app/services/auth_service.dart';
+import 'package:pet_cats_app/model/order_model.dart';
+import 'package:pet_cats_app/pages/success_screen.dart';
+import 'package:pet_cats_app/provider/cart.dart';
 import 'package:pet_cats_app/shared/loading.dart';
+import 'package:provider/provider.dart';
 
+import '../services/database_service.dart';
 import '../shared/dialog_helper.dart';
 
-class ForgotPassword extends StatelessWidget {
-  const ForgotPassword({Key? key}) : super(key: key);
+class OrderDetailsScreen extends StatelessWidget {
+  OrderDetailsScreen({Key? key, required this.order}) : super(key: key);
+
+  final OrderModel order;
+  final TextEditingController mobileNumberController =
+  TextEditingController();
+  final TextEditingController locationController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController emailController = TextEditingController();
+    final cart = Provider.of<Cart>(context);
     return SafeArea(
       child: Scaffold(
           body: SafeArea(
@@ -32,26 +40,40 @@ class ForgotPassword extends StatelessWidget {
                           height: 35,
                         ),
                         Text(
-                          "Forgot Password",
+                          "Delivery Info",
                           style: TextStyle(fontSize: 33, fontFamily: "myfont"),
                         ),
                         SizedBox(
-                          height: 35,
-                        ),
-                        SvgPicture.asset(
-                          "assets/icons/login.svg",
-                          width: 288,
-                        ),
-                        SizedBox(
-                          height: 50,
+                          height: 100,
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 50),
                           child: Text(
-                            "Please enter your email and we will send the reset password email to you :",
+                            "Please fill the fields below to let us deliver the order to you :",
                             style: TextStyle(
                                 color: Colors.purple,
                                 fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 100,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.purple[100],
+                            borderRadius: BorderRadius.circular(66),
+                          ),
+                          width: 266,
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: TextField(
+                            controller: mobileNumberController,
+                            decoration: InputDecoration(
+                                icon: Icon(
+                                  Icons.call,
+                                  color: Colors.purple[800],
+                                ),
+                                hintText: "Mobile Number :",
+                                border: InputBorder.none),
                           ),
                         ),
                         SizedBox(
@@ -65,32 +87,43 @@ class ForgotPassword extends StatelessWidget {
                           width: 266,
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
-                            controller: emailController,
+                            controller: locationController,
                             decoration: InputDecoration(
                                 icon: Icon(
-                                  Icons.person,
+                                  Icons.location_on,
                                   color: Colors.purple[800],
                                 ),
-                                hintText: "Email :",
+                                hintText: "Your Location :",
                                 border: InputBorder.none),
                           ),
                         ),
                         SizedBox(
-                          height: 23,
+                          height: 100,
                         ),
                         ElevatedButton(
-                          onPressed: () async {
-                            if(emailController.text.isEmpty){
+                          onPressed: () {
+                            if(locationController.text.isEmpty || mobileNumberController.text.isEmpty){
                               DialogHelper.shared.showErrorDialog(context: context, subTitle: "All fields are required");
                               return ;
                             }
-                            await Loading.wrap(
+                            DialogHelper.shared.showAreYouSureDialog(
                               context: context,
-                              function: () async {
-                                await AuthServices.resetPassword(
-                                  email: emailController.text,
+                              title: "Place Order",
+                              subTitle: "Are you sure you want to place the order?",
+                              action: () async {
+                                order.mobileNumber =
+                                    mobileNumberController.text.trim();
+                                order.location = locationController.text;
+                                await Loading.wrap(
                                   context: context,
+                                  function: () async {
+                                    await Database().placeOrder(order: order);
+                                  },
                                 );
+
+                                cart.selectedProducts.clear();
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (_) => SuccessScreen()));
                               },
                             );
                           },
@@ -105,7 +138,7 @@ class ForgotPassword extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(27))),
                           ),
                           child: Text(
-                            "SEND",
+                            "ORDER",
                             style: TextStyle(fontSize: 24),
                           ),
                         ),

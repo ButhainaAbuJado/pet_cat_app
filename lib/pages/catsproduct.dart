@@ -3,6 +3,7 @@
 import 'package:pet_cats_app/model/cart_item_model.dart';
 import 'package:pet_cats_app/pages/details_catp.dart';
 import 'package:pet_cats_app/provider/cart.dart';
+import 'package:pet_cats_app/search/search_cat_product.dart';
 import 'package:pet_cats_app/services/database_service.dart';
 import 'package:pet_cats_app/shared/appbar.dart';
 import 'package:flutter/material.dart';
@@ -80,11 +81,29 @@ class _CatsProductState extends State<CatsProduct> {
                                 color: Colors.purple,
                                 onPressed: () {
                                   cart.add(CartItem(
+                                    id: products![index].id,
                                     imageUrl: products![index].imageUrl,
                                     name: products![index].name,
                                     price: products![index].price,
+                                    collection: 'catProducts',
                                     location: products![index].location!,
                                   ));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "Item added Successfully!",
+                                          style: TextStyle(
+                                              color: Colors.purple[100]),
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.purple,
+                                      duration: Duration(
+                                        seconds: 2,
+                                      ),
+                                    ),
+                                  );
                                 },
                                 icon: Icon(Icons.add_circle_outline)),
                             title: Text(""),
@@ -100,7 +119,12 @@ class _CatsProductState extends State<CatsProduct> {
             Column(
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await showSearch(
+                      context: context,
+                      delegate: SearchCatProduct(catProducts: products!),
+                    );
+                  },
                   icon: Icon(Icons.search),
                 ),
               ],

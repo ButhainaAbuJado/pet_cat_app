@@ -4,6 +4,7 @@ import 'package:pet_cats_app/model/user_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:pet_cats_app/services/auth_service.dart';
+import 'package:pet_cats_app/shared/dialog_helper.dart';
 import 'package:pet_cats_app/shared/loading.dart';
 
 class Login extends StatelessWidget {
@@ -96,6 +97,14 @@ class Login extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
+                            if(usernameController.text.isEmpty || passwordController.text.isEmpty){
+                              DialogHelper.shared.showErrorDialog(context: context, subTitle: "All fields are required");
+                              return ;
+                            }
+                            if(!validateStructure(passwordController.text)){
+                              DialogHelper.shared.showErrorDialog(context: context,title: 'Invalid Password', subTitle: "Your password should have Uppercase and lowercase letters, Numerics and Special Characters ( ! @ # \$ & * ~ )");
+                              return ;
+                            }
                             bool isValidCredential = false;
                             await Loading.wrap(
                               context: context,
@@ -210,5 +219,11 @@ class Login extends StatelessWidget {
         UserModel.shared.imageUrl = firestoreUser.get('imageUrl');
       },
     );
+  }
+
+  bool validateStructure(String value){
+    String  pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+    RegExp regExp = RegExp(pattern);
+    return regExp.hasMatch(value);
   }
 }

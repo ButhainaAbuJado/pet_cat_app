@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last
 
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:pet_cats_app/model/cat_product_model.dart';
 import 'package:pet_cats_app/shared/appbar.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,18 @@ class ProductDetails extends StatefulWidget {
 
 class _ProductDetailsState extends State<ProductDetails> {
   bool isShowMore = true;
+  double rating = 0;
 
+  @override
+  void initState() {
+    getRating();
+    super.initState();
+  }
+
+  void getRating() async {
+    rating = await widget.product.getRating();
+    setState(() {});
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,34 +66,19 @@ class _ProductDetailsState extends State<ProductDetails> {
                   SizedBox(
                     width: 8,
                   ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: 26,
-                        color: Color.fromARGB(255, 255, 191, 0),
-                      ),
-                      Icon(
-                        Icons.star,
-                        size: 26,
-                        color: Color.fromARGB(255, 255, 191, 0),
-                      ),
-                      Icon(
-                        Icons.star,
-                        size: 26,
-                        color: Color.fromARGB(255, 255, 191, 0),
-                      ),
-                      Icon(
-                        Icons.star,
-                        size: 26,
-                        color: Color.fromARGB(255, 255, 191, 0),
-                      ),
-                      Icon(
-                        Icons.star,
-                        size: 26,
-                        color: Color.fromARGB(255, 255, 191, 0),
-                      ),
-                    ],
+                  RatingBar.builder(
+                    initialRating: rating,
+                    minRating: 1,
+                    direction: Axis.horizontal,
+                    itemCount: 5,
+                    itemPadding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    ignoreGestures: true,
+                    itemSize: 25,
+                    itemBuilder: (context, _) => const Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                    ),
+                    onRatingUpdate: (rating) {},
                   ),
                   SizedBox(
                     width: 66,

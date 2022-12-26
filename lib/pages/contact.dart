@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ignore_for_file: prefer_const_constructors
 class Contact extends StatefulWidget {
@@ -57,36 +58,46 @@ class _Contact extends State<Contact> {
                   height: 100.0,
                 ),
               ),
-              Card(
-                color: Colors.purple[100],
-                margin: EdgeInsets.all(17.0),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.phone,
-                    color: Colors.purple,
-                  ),
-                  title: Text(
-                    '0798465225',
-                    style: TextStyle(
-                      fontSize: 22.0,
-                      color: Colors.grey[800],
+              InkWell(
+                onTap: (){
+                  launchUrl(Uri.parse("tel: 0798465225"));
+                },
+                child: Card(
+                  color: Colors.purple[100],
+                  margin: EdgeInsets.all(17.0),
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.phone,
+                      color: Colors.purple,
+                    ),
+                    title: Text(
+                      '0798465225',
+                      style: TextStyle(
+                        fontSize: 22.0,
+                        color: Colors.grey[800],
+                      ),
                     ),
                   ),
                 ),
               ),
-              Card(
-                color: Colors.purple[100],
-                margin: EdgeInsets.all(17.0),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.email,
-                    color: Colors.purple,
-                  ),
-                  title: Text(
-                    'catsShop@gmail.com',
-                    style: TextStyle(
-                      fontSize: 22.0,
-                      color: Colors.grey[800],
+              InkWell(
+                onTap: (){
+                  launchUrl(Uri.parse("mailto: catsShop@gmail.com"));
+                },
+                child: Card(
+                  color: Colors.purple[100],
+                  margin: EdgeInsets.all(17.0),
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.email,
+                      color: Colors.purple,
+                    ),
+                    title: Text(
+                      'catsShop@gmail.com',
+                      style: TextStyle(
+                        fontSize: 22.0,
+                        color: Colors.grey[800],
+                      ),
                     ),
                   ),
                 ),

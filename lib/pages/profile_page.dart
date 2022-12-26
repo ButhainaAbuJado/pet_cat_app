@@ -4,12 +4,16 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pet_cats_app/model/user_model.dart';
 import 'package:pet_cats_app/services/auth_service.dart';
+import 'package:pet_cats_app/services/database_service.dart';
 import 'package:pet_cats_app/shared/loading.dart';
 
+import '../model/cart_item_model.dart';
 import '../services/storage_service.dart';
+import '../shared/dialog_helper.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -19,20 +23,41 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  List<CartItem> orderItems = [];
+
+  @override
+  void initState() {
+    _getOrderItems();
+    super.initState();
+  }
+
+  void _getOrderItems() async {
+    orderItems = await Database().getOrderItems();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         actions: [
           TextButton.icon(
-            onPressed: () async {
-              await Loading.wrap(
+            onPressed: () {
+              DialogHelper.shared.showAreYouSureDialog(
                 context: context,
-                function: () async {
-                  await AuthServices.logout(context: context);
+                title: "Logout",
+                subTitle: "Are you sure you want to logout?",
+                action: () async {
+                  await Loading.wrap(
+                    context: context,
+                    function: () async {
+                      await AuthServices.logout(context: context);
+                    },
+                  );
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                      "/login", (route) => false);
                 },
               );
-              Navigator.of(context).pushNamedAndRemoveUntil("/login", (route) => false);
             },
             label: const Text(
               "logout",
@@ -149,14 +174,22 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               Center(
                 child: TextButton(
-                    onPressed: () async {
-                      await Loading.wrap(
+                    onPressed: () {
+                      DialogHelper.shared.showAreYouSureDialog(
                         context: context,
-                        function: () async {
-                          await AuthServices.deleteUser(context: context);
+                        title: "Delete User",
+                        subTitle: "Are you sure you want to delete the user?",
+                        action: () async {
+                          await Loading.wrap(
+                            context: context,
+                            function: () async {
+                              await AuthServices.deleteUser(context: context);
+                            },
+                          );
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              "/login", (route) => false);
                         },
                       );
-                      Navigator.of(context).pushNamedAndRemoveUntil("/login", (route) => false);
                     },
                     child: const Text(
                       "Delete User",
@@ -168,20 +201,140 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               Center(
                   child: Container(
+                      width: MediaQuery.of(context).size.width - 50,
                       padding: const EdgeInsets.all(11),
                       decoration: BoxDecoration(
                           color: Colors.purple[100],
                           borderRadius: BorderRadius.circular(11)),
-                      child: const Text(
-                        "Info from firebase firestore",
-                        style: TextStyle(
-                          fontSize: 20,
-                        ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            "Last Order Items",
+                            style:
+                                TextStyle(fontSize: 20, color: Colors.purple),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SizedBox(
+                              height: 120,
+                              child: orderItems.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        "no items available",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: orderItems.length,
+                                      itemBuilder: (context, index) {
+                                        return Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 10),
+                                          child: InkWell(
+                                            onTap: () {
+                                              _rateItem(
+                                                  item: orderItems[index],
+                                                  context: context);
+                                            },
+                                            child: Container(
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  image: DecorationImage(
+                                                      image: NetworkImage(
+                                                          orderItems[index]
+                                                              .imageUrl),
+                                                      fit: BoxFit.cover)),
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                            ),
+                          )
+                        ],
                       ))),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _rateItem(
+      {required CartItem item, required BuildContext context}) {
+    double _rating = 5;
+    showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => AlertDialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.purple),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Rate ${item.name}",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      RatingBar.builder(
+                        initialRating: _rating,
+                        minRating: 1,
+                        direction: Axis.horizontal,
+                        itemCount: 5,
+                        itemPadding:
+                            const EdgeInsets.symmetric(horizontal: 2.0),
+                        itemSize: 30,
+                        itemBuilder: (context, _) => const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        onRatingUpdate: (rating) {
+                          setState(() {
+                            _rating = rating;
+                          });
+                        },
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await Loading.wrap(context: context, function: () async {
+                            await FirebaseFirestore.instance
+                                .collection(item.collection!)
+                                .doc(item.id)
+                                .collection('rating')
+                                .doc(UserModel.shared.userId)
+                                .set({'rating': _rating.round()});
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all(Colors.purple[100]),
+                          shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(27))),
+                        ),
+                        child: const Text(
+                          "Submit",
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ));
   }
 }
