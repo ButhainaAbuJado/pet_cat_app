@@ -9,13 +9,22 @@ import 'package:provider/provider.dart';
 import '../services/database_service.dart';
 import '../shared/dialog_helper.dart';
 
-class OrderDetailsScreen extends StatelessWidget {
-  OrderDetailsScreen({Key? key, required this.order}) : super(key: key);
+class OrderDetailsScreen extends StatefulWidget {
+  const OrderDetailsScreen({Key? key, required this.order}) : super(key: key);
 
   final OrderModel order;
-  final TextEditingController mobileNumberController =
-  TextEditingController();
+
+  @override
+  State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+}
+
+class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
+  final TextEditingController mobileNumberController = TextEditingController();
+
   final TextEditingController locationController = TextEditingController();
+
+  String mobileHint = "Mobile Number :";
+  String mobilePrefixText = "";
 
   @override
   Widget build(BuildContext context) {
@@ -66,13 +75,21 @@ class OrderDetailsScreen extends StatelessWidget {
                           width: 266,
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
+                            onTap: () {
+                              setState(() {
+                                mobileHint = "XXXXXXXX";
+                                mobilePrefixText = "07";
+                              });
+                            },
+                            keyboardType: TextInputType.phone,
                             controller: mobileNumberController,
                             decoration: InputDecoration(
+                                prefixText: mobilePrefixText,
                                 icon: Icon(
                                   Icons.call,
                                   color: Colors.purple[800],
                                 ),
-                                hintText: "Mobile Number :",
+                                hintText: mobileHint,
                                 border: InputBorder.none),
                           ),
                         ),
@@ -102,22 +119,33 @@ class OrderDetailsScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            if(locationController.text.isEmpty || mobileNumberController.text.isEmpty){
-                              DialogHelper.shared.showErrorDialog(context: context, subTitle: "All fields are required");
-                              return ;
+                            String mobileNumber =
+                                "07${mobileNumberController.text}";
+                            if (locationController.text.isEmpty) {
+                              DialogHelper.shared.showErrorDialog(
+                                  context: context,
+                                  subTitle: "All fields are required");
+                              return;
+                            }
+                            if (!validate(mobileNumber)) {
+                              DialogHelper.shared.showErrorDialog(
+                                  context: context,
+                                  subTitle: "Please enter a valid mobile number");
+                              return;
                             }
                             DialogHelper.shared.showAreYouSureDialog(
                               context: context,
                               title: "Place Order",
-                              subTitle: "Are you sure you want to place the order?",
+                              subTitle:
+                                  "Are you sure you want to place the order?",
                               action: () async {
-                                order.mobileNumber =
-                                    mobileNumberController.text.trim();
-                                order.location = locationController.text;
+                                widget.order.mobileNumber = mobileNumber.trim();
+                                widget.order.location = locationController.text;
                                 await Loading.wrap(
                                   context: context,
                                   function: () async {
-                                    await Database().placeOrder(order: order);
+                                    await Database()
+                                        .placeOrder(order: widget.order);
                                   },
                                 );
 
@@ -167,5 +195,11 @@ class OrderDetailsScreen extends StatelessWidget {
         ),
       )),
     );
+  }
+
+  bool validate(String mobileNumber) {
+    String pattern = r'^07[789]\d{7}$';
+    RegExp regExp = RegExp(pattern);
+    return regExp.hasMatch(mobileNumber);
   }
 }

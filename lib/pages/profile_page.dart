@@ -54,8 +54,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       await AuthServices.logout(context: context);
                     },
                   );
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                      "/login", (route) => false);
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil("/login", (route) => false);
                 },
               );
             },
@@ -263,8 +263,22 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _rateItem(
-      {required CartItem item, required BuildContext context}) {
-    double _rating = 5;
+      {required CartItem item, required BuildContext context}) async {
+    double _rating = 0;
+    await Loading.wrap(context: context, function: () async{
+      try {
+        final currentRating = await FirebaseFirestore.instance
+            .collection(item.collection!)
+            .doc(item.id)
+            .collection('rating')
+            .doc(UserModel.shared.userId)
+            .get();
+        _rating = currentRating.get('rating') / 1.0;
+      }
+      catch (e){
+        _rating = 5;
+      }
+    });
     showDialog<void>(
         context: context,
         barrierDismissible: true,
@@ -309,14 +323,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       ElevatedButton(
                         onPressed: () async {
-                          await Loading.wrap(context: context, function: () async {
-                            await FirebaseFirestore.instance
-                                .collection(item.collection!)
-                                .doc(item.id)
-                                .collection('rating')
-                                .doc(UserModel.shared.userId)
-                                .set({'rating': _rating.round()});
-                          });
+                          await Loading.wrap(
+                              context: context,
+                              function: () async {
+                                await FirebaseFirestore.instance
+                                    .collection(item.collection!)
+                                    .doc(item.id)
+                                    .collection('rating')
+                                    .doc(UserModel.shared.userId)
+                                    .set({'rating': _rating.round()});
+                              });
                           Navigator.of(context).pop();
                         },
                         style: ButtonStyle(

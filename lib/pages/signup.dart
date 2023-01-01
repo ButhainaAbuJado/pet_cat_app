@@ -6,15 +6,21 @@ import 'package:pet_cats_app/services/auth_service.dart';
 import '../shared/dialog_helper.dart';
 import '../shared/loading.dart';
 
-class Signup extends StatelessWidget {
+class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-    final TextEditingController usernameController = TextEditingController();
+  State<Signup> createState() => _SignupState();
+}
 
+class _SignupState extends State<Signup> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  bool isObscureText = true;
+
+  @override
+  Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
           body: SafeArea(
@@ -80,6 +86,7 @@ class Signup extends StatelessWidget {
                           width: 266,
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
+                            keyboardType: TextInputType.emailAddress,
                             controller: emailController,
                             decoration: InputDecoration(
                                 icon: Icon(
@@ -102,11 +109,18 @@ class Signup extends StatelessWidget {
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
                             controller: passwordController,
-                            obscureText: true,
+                            obscureText: isObscureText,
                             decoration: InputDecoration(
-                                suffix: Icon(
-                                  Icons.visibility,
-                                  color: Colors.purple[900],
+                                suffix: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      isObscureText = !isObscureText;
+                                    });
+                                  },
+                                  child: Icon(
+                                    isObscureText? Icons.visibility: Icons.visibility_off,
+                                    color: Colors.purple[900],
+                                  ),
                                 ),
                                 icon: Icon(
                                   Icons.lock,
@@ -122,19 +136,27 @@ class Signup extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            if(usernameController.text.isEmpty || passwordController.text.isEmpty || emailController.text.isEmpty){
-                              DialogHelper.shared.showErrorDialog(context: context, subTitle: "All fields are required");
-                              return ;
+                            if (usernameController.text.isEmpty ||
+                                passwordController.text.isEmpty ||
+                                emailController.text.isEmpty) {
+                              DialogHelper.shared.showErrorDialog(
+                                  context: context,
+                                  subTitle: "All fields are required");
+                              return;
                             }
-                            if(!validateStructure(passwordController.text)){
-                              DialogHelper.shared.showErrorDialog(context: context,title: 'Invalid Password', subTitle: "Your password should have Uppercase and lowercase letters, Numerics and Special Characters ( ! @ # \$ & * ~ )");
-                              return ;
+                            if (!validateStructure(passwordController.text)) {
+                              DialogHelper.shared.showErrorDialog(
+                                  context: context,
+                                  title: 'Invalid Password',
+                                  subTitle:
+                                      "Your password should have Uppercase and lowercase letters, Numerics and Special Characters ( ! @ # \$ & * ~ )");
+                              return;
                             }
                             bool isValidCredentials = false;
                             await Loading.wrap(
                               context: context,
                               function: () async {
-                               isValidCredentials = await AuthServices.signUp(
+                                isValidCredentials = await AuthServices.signUp(
                                   username: usernameController.text.trim(),
                                   email: emailController.text,
                                   password: passwordController.text,
@@ -142,7 +164,7 @@ class Signup extends StatelessWidget {
                                 );
                               },
                             );
-                            if(isValidCredentials){
+                            if (isValidCredentials) {
                               Navigator.of(context).pushNamed('/login');
                             }
                           },
@@ -291,8 +313,9 @@ class Signup extends StatelessWidget {
     );
   }
 
-  bool validateStructure(String value){
-    String  pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+  bool validateStructure(String value) {
+    String pattern =
+        r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
     RegExp regExp = RegExp(pattern);
     return regExp.hasMatch(value);
   }

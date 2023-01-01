@@ -7,13 +7,19 @@ import 'package:pet_cats_app/services/auth_service.dart';
 import 'package:pet_cats_app/shared/dialog_helper.dart';
 import 'package:pet_cats_app/shared/loading.dart';
 
-class Login extends StatelessWidget {
+class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
 
   @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
+  bool isObscureText = true;
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  @override
   Widget build(BuildContext context) {
-    final TextEditingController usernameController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
     return SafeArea(
       child: Scaffold(
           body: SafeArea(
@@ -77,11 +83,18 @@ class Login extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: TextField(
                             controller: passwordController,
-                            obscureText: true,
+                            obscureText: isObscureText,
                             decoration: InputDecoration(
-                                suffix: Icon(
-                                  Icons.visibility,
-                                  color: Colors.purple[900],
+                                suffix: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      isObscureText = !isObscureText;
+                                    });
+                                  },
+                                  child: Icon(
+                                    isObscureText? Icons.visibility: Icons.visibility_off,
+                                    color: Colors.purple[900],
+                                  ),
                                 ),
                                 icon: Icon(
                                   Icons.lock,
@@ -97,13 +110,20 @@ class Login extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            if(usernameController.text.isEmpty || passwordController.text.isEmpty){
-                              DialogHelper.shared.showErrorDialog(context: context, subTitle: "All fields are required");
-                              return ;
+                            if (usernameController.text.isEmpty ||
+                                passwordController.text.isEmpty) {
+                              DialogHelper.shared.showErrorDialog(
+                                  context: context,
+                                  subTitle: "All fields are required");
+                              return;
                             }
-                            if(!validateStructure(passwordController.text)){
-                              DialogHelper.shared.showErrorDialog(context: context,title: 'Invalid Password', subTitle: "Your password should have Uppercase and lowercase letters, Numerics and Special Characters ( ! @ # \$ & * ~ )");
-                              return ;
+                            if (!validateStructure(passwordController.text)) {
+                              DialogHelper.shared.showErrorDialog(
+                                  context: context,
+                                  title: 'Invalid Password',
+                                  subTitle:
+                                      "Your password should have Uppercase and lowercase letters, Numerics and Special Characters ( ! @ # \$ & * ~ )");
+                              return;
                             }
                             bool isValidCredential = false;
                             await Loading.wrap(
@@ -201,7 +221,7 @@ class Login extends StatelessWidget {
     );
   }
 
-  Future<void> _fillUserModel({required BuildContext context}) async{
+  Future<void> _fillUserModel({required BuildContext context}) async {
     await Loading.wrap(
       context: context,
       function: () async {
@@ -221,8 +241,9 @@ class Login extends StatelessWidget {
     );
   }
 
-  bool validateStructure(String value){
-    String  pattern = r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
+  bool validateStructure(String value) {
+    String pattern =
+        r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$';
     RegExp regExp = RegExp(pattern);
     return regExp.hasMatch(value);
   }
